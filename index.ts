@@ -45,7 +45,7 @@ class AltManager {
         const data = await this._fetch('/players');
         return data.map((player: any) => {
             const offlinePlayer = new AltManager.OfflinePlayer(this, player.id, player.name, player.authMethod, player.lastOnline ? new Date(player.lastOnline) : null);
-            const Player = data.online ? new AltManager.Player(offlinePlayer, player.server, player.health, player.hunger, player.gameMode, player.version, player.username) : null;
+            const Player = data.online ? new AltManager.Player(offlinePlayer, player.server, player.version, player.username, player.liveData) : null;
             return Player ?? offlinePlayer;
         });
     }
@@ -57,7 +57,7 @@ class AltManager {
     public async getPlayer(id: AltManager.PlayerId): Promise<AltManager.OfflinePlayer | AltManager.Player> {
         const data = await this._fetch(`/players/${id}`);
         const offlinePlayer = new AltManager.OfflinePlayer(this, data.id, data.name, data.authMethod, data.lastOnline ? new Date(data.lastOnline) : null);
-        const Player = data.online ? new AltManager.Player(offlinePlayer, data.server, data.health, data.hunger, data.gameMode, data.version, data.username) : null;
+        const Player = data.online ? new AltManager.Player(offlinePlayer, data.server, data.version, data.username, data.liveData) : null;
         return Player ?? offlinePlayer;
     }
 
@@ -121,7 +121,7 @@ namespace AltManager {
          */
         public async connect(server: string, version?: string, brand?: string): Promise<AltManager.Player> {
             const data = await this.client._fetch(`/players/${this.id}/connect`, 'POST', {server, version, brand});
-            return new AltManager.Player(this, data.server, data.health, data.hunger, data.gameMode, data.version, data.username);
+            return new AltManager.Player(this, data.server, data.version, data.username, data.liveData);
         }
 
         /**
@@ -149,42 +149,55 @@ namespace AltManager {
         }
 
         /**
-         * The player's current health (0-20)
+         * Dynamic/live player data
          */
-        #health: number;
+        private liveData: {health: number, hunger: number, ping: number, gameMode: "survival" | "creative" | "adventure" | "spectator", coordinates: number[]};
 
         /**
          * The player's current health (0-20)
          */
         public get health(): number {
-            return this.#health;
+            return this.liveData.health;
         }
 
         /**
          * The player's current food/hunger (0-20)
          */
-        #hunger: number;
+        public get hunger(): number {
+            return this.liveData.hunger;
+        }
 
         /**
-         * The player's current food/hunger (0-20)
+         * The player's current ping (in milliseconds)
          */
-        public get hunger(): number {
-            return this.#hunger;
+        public get ping(): number {
+            return this.liveData.ping;
+        }
+
+        /**
+         * The player's current game mode
+         */
+        public get gameMode(): "survival" | "creative" | "adventure" | "spectator" {
+            return this.liveData.gameMode;
+        }
+
+        /**
+         * The player's current coordinates
+         */
+        public get coordinates(): number[] {
+            return this.liveData.coordinates;
         }
 
         /**
          * Construct new Player instance
          * @param offlinePlayer This player's  offline player
          * @param server The address of the server the player is connected to
-         * @param health The player's health (0-20)
-         * @param hunger The player's food/hunger (0-20)
-         * @param gameMode The player's current game mode
          * @param version The player's Minecraft version
          * @param username The player's Minecraft username
+         * @param liveData Dynamic/live player data
          */
-        constructor(public readonly offlinePlayer: OfflinePlayer, public readonly server: string, health: number, hunger: number, public readonly gameMode: string, public readonly version: string, public readonly username: string) {
-            this.#health = health;
-            this.#hunger = hunger;
+        constructor(public readonly offlinePlayer: OfflinePlayer, public readonly server: string, public readonly version: string, public readonly username: string, liveData: typeof Player.prototype.liveData) {
+            this.liveData = liveData;
         }
 
         /**
