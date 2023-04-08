@@ -55,7 +55,7 @@ class AltManager {
         const data = await this._fetch('/players');
         return data.map((player: any) => {
             const offlinePlayer = new AltManager.OfflinePlayer(this, player.id, player.name, player.authMethod, player.lastOnline ? new Date(player.lastOnline) : null);
-            const Player = data.online ? new AltManager.Player(offlinePlayer, player.server, player.version, player.username, player.liveData) : null;
+            const Player = data.online ? new AltManager.Player(offlinePlayer, player.server, player.version, player.username, player.uuid, player.liveData) : null;
             return Player ?? offlinePlayer;
         });
     }
@@ -67,7 +67,7 @@ class AltManager {
     public async getPlayer(id: AltManager.PlayerId): Promise<AltManager.OfflinePlayer | AltManager.Player> {
         const data = await this._fetch(`/players/${id}`);
         const offlinePlayer = new AltManager.OfflinePlayer(this, data.id, data.name, data.authMethod, data.lastOnline ? new Date(data.lastOnline) : null);
-        const Player = data.online ? new AltManager.Player(offlinePlayer, data.server, data.version, data.username, data.liveData) : null;
+        const Player = data.online ? new AltManager.Player(offlinePlayer, data.server, data.version, data.username, data.uuid, data.liveData) : null;
         return Player ?? offlinePlayer;
     }
 
@@ -131,7 +131,7 @@ namespace AltManager {
          */
         public async connect(server: string, version?: string, brand?: string): Promise<AltManager.Player> {
             const data = await this.client._fetch(`/players/${this.id}/connect`, 'POST', {server, version, brand});
-            return new AltManager.Player(this, data.server, data.version, data.username, data.liveData);
+            return new AltManager.Player(this, data.server, data.version, data.username, data.uuid, data.liveData);
         }
 
         /**
@@ -204,9 +204,10 @@ namespace AltManager {
          * @param server The address of the server the player is connected to
          * @param version The player's Minecraft version
          * @param username The player's Minecraft username
+         * @param uuid The player's Minecraft UUID
          * @param liveData Dynamic/live player data
          */
-        constructor(public readonly offlinePlayer: OfflinePlayer, public readonly server: string, public readonly version: string, public readonly username: string, liveData: typeof Player.prototype.liveData) {
+        constructor(public readonly offlinePlayer: OfflinePlayer, public readonly server: string, public readonly version: string, public readonly username: string, public readonly uuid: string, liveData: typeof Player.prototype.liveData) {
             this.liveData = liveData;
 
             // subscribe to live data updates
