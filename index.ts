@@ -1,4 +1,5 @@
 import * as SocketIOClient from "socket.io-client";
+import EventEmitter from "events";
 
 /**
  * Alt manager API client
@@ -107,6 +108,21 @@ namespace AltManager {
      */
     export class OfflinePlayer extends Client {
         /**
+         * Event emitter
+         */
+        private readonly eventEmitter = new EventEmitter();
+
+        /**
+         * The player has been authenticated and connected to a server
+         */
+        public on(event: "connect", listener: (player: Player) => void): this;
+        public on(event: string, listener: (...args: any[]) => void): this {
+            this.eventEmitter.on(event, listener);
+            return this;
+        }
+
+
+        /**
          * Whether the player is online. This is never the case for OfflinePlayer.
          */
         public readonly online = false;
@@ -146,6 +162,50 @@ namespace AltManager {
      * An authenticated player that is connected to a server.
      */
     export class Player {
+        /**
+         * Event emitter
+         */
+        private readonly eventEmitter = new EventEmitter();
+
+        /**
+         * The player's health has changed
+         */
+        public on(event: "healthChange", listener: (previousData: typeof Player.prototype.health) => void): this;
+        /**
+         * The player's hunger has changed
+         */
+        public on(event: "hungerChange", listener: (previousHunger: typeof Player.prototype.hunger) => void): this;
+        /**
+         * The player's ping has changed
+         */
+        public on(event: "pingChange", listener: (previousPing: typeof Player.prototype.ping) => void): this;
+        /**
+         * The player's game mode has changed
+         */
+        public on(event: "gameModeChange", listener: (previousGameMode: typeof Player.prototype.gameMode) => void): this;
+        /**
+         * The player's coordinates have changed
+         */
+        public on(event: "coordinatesChange", listener: (previousCoordinates: typeof Player.prototype.coordinates) => void): this;
+        /**
+         * The player's live data has changed
+         */
+        public on(event: "change", listener: (previousData: typeof Player.prototype.liveData) => void): this;
+        /**
+         * The player has received a chat message
+         * @todo Add chat message type
+         */
+        public on(event: "chat", listener: (message: any) => void): this;
+        /**
+         * The player has disconnected from the server
+         */
+        public on(event: "disconnect", listener: () => void): this;
+        public on(event: string, listener: (...args: any[]) => void): this {
+            this.eventEmitter.on(event, listener);
+            return this;
+        }
+
+
         /**
          * Whether the player is online. This is always the case for Player.
          */
@@ -213,7 +273,15 @@ namespace AltManager {
             // subscribe to live data updates
             this.offlinePlayer.client._socket.emit("subscribe", this.offlinePlayer.id);
             this.offlinePlayer.client._socket.on("data", (data: typeof Player.prototype.liveData) => {
+                // detect changes
+                const keys = Object.keys(data) as (keyof typeof Player.prototype.liveData)[];
+                for (const key of keys) if (data[key] !== this.liveData[key]) this.eventEmitter.emit(key + "Change", this.liveData[key]);
+                this.eventEmitter.emit("change", this.liveData);
+                // update live data
                 this.liveData = data;
+            });
+            this.offlinePlayer.client._socket.on("chat", (message: string) => {
+                this.eventEmitter.emit("chat", message);
             });
         }
 
@@ -223,6 +291,7 @@ namespace AltManager {
         public async disconnect(): Promise<void> {
             this.offlinePlayer.client._socket.emit("unsubscribe", this.offlinePlayer.id);
             await this.client._fetch(`/players/${this.offlinePlayer.id}/disconnect`, 'POST');
+            this.eventEmitter.emit("disconnect");
         }
 
         /**
