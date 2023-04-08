@@ -1,12 +1,22 @@
+import * as SocketIOClient from "socket.io-client";
+
 /**
  * Alt manager API client
  */
 class AltManager {
     /**
+     * Web socket client
+     * @internal
+     */
+    public readonly _socket: SocketIOClient.Socket;
+
+    /**
      * Construct new API client instance
      * @param [baseUrl] Base URL of the API. Default: `http://localhost:8080`
      */
-    constructor(public readonly baseUrl: string = 'http://localhost:8080') {}
+    constructor(public readonly baseUrl: string = 'http://localhost:8080') {
+        this._socket = SocketIOClient.io(baseUrl);
+    }
 
     /**
      * Fetch data from the API
