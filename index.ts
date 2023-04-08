@@ -161,7 +161,7 @@ namespace AltManager {
         /**
          * Dynamic/live player data
          */
-        private liveData: {health: number, hunger: number, ping: number, gameMode: "survival" | "creative" | "adventure" | "spectator", coordinates: number[]};
+        private liveData: {health: number, hunger: number, ping: number, gameMode: "survival" | "creative" | "adventure" | "spectator", coordinates: [number, number, number]};
 
         /**
          * The player's current health (0-20)
@@ -194,7 +194,7 @@ namespace AltManager {
         /**
          * The player's current coordinates
          */
-        public get coordinates(): number[] {
+        public get coordinates(): [number, number, number] {
             return this.liveData.coordinates;
         }
 
