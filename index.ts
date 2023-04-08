@@ -53,10 +53,10 @@ class AltManager {
      */
     public async listPlayers(): Promise<(AltManager.OfflinePlayer | AltManager.Player)[]> {
         const data = await this._fetch('/players');
-        return data.map((player: any) => {
-            const offlinePlayer = new AltManager.OfflinePlayer(this, player.id, player.name, player.authMethod, player.lastOnline ? new Date(player.lastOnline) : null);
-            const Player = data.online ? new AltManager.Player(offlinePlayer, player.server, player.version, player.username, player.uuid, player.liveData) : null;
-            return Player ?? offlinePlayer;
+        return data.map((p: any) => {
+            const offlinePlayer = new AltManager.OfflinePlayer(this, p.id, p.name, p.authMethod, p.lastOnline ? new Date(p.lastOnline) : null);
+            const player = p.online ? new AltManager.Player(offlinePlayer, p.server, p.version, p.username, p.uuid, p.liveData) : null;
+            return player ?? offlinePlayer;
         });
     }
 
