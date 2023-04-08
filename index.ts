@@ -121,6 +121,15 @@ namespace AltManager {
             return this;
         }
 
+        /**
+         * The player has been authenticated and connected to a server
+         */
+        public once(event: "connect", listener: (player: Player) => void): this;
+        public once(event: string, listener: (...args: any[]) => void): this {
+            this.eventEmitter.once(event, listener);
+            return this;
+        }
+
 
         /**
          * Whether the player is online. This is never the case for OfflinePlayer.
@@ -202,6 +211,44 @@ namespace AltManager {
         public on(event: "disconnect", listener: () => void): this;
         public on(event: string, listener: (...args: any[]) => void): this {
             this.eventEmitter.on(event, listener);
+            return this;
+        }
+
+        /**
+         * The player's health has changed
+         */
+        public once(event: "healthChange", listener: (previousData: typeof Player.prototype.health) => void): this;
+        /**
+         * The player's hunger has changed
+         */
+        public once(event: "hungerChange", listener: (previousHunger: typeof Player.prototype.hunger) => void): this;
+        /**
+         * The player's ping has changed
+         */
+        public once(event: "pingChange", listener: (previousPing: typeof Player.prototype.ping) => void): this;
+        /**
+         * The player's game mode has changed
+         */
+        public once(event: "gameModeChange", listener: (previousGameMode: typeof Player.prototype.gameMode) => void): this;
+        /**
+         * The player's coordinates have changed
+         */
+        public once(event: "coordinatesChange", listener: (previousCoordinates: typeof Player.prototype.coordinates) => void): this;
+        /**
+         * The player's live data has changed
+         */
+        public once(event: "change", listener: (previousData: typeof Player.prototype.liveData) => void): this;
+        /**
+         * The player has received a chat message
+         * @todo Add chat message type
+         */
+        public once(event: "chat", listener: (message: any) => void): this;
+        /**
+         * The player has disconnected from the server
+         */
+        public once(event: "disconnect", listener: () => void): this;
+        public once(event: string, listener: (...args: any[]) => void): this {
+            this.eventEmitter.once(event, listener);
             return this;
         }
 
