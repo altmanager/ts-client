@@ -109,7 +109,7 @@ namespace AltManager {
         /**
          * Whether the player is online. This is never the case for OfflinePlayer.
          */
-        public readonly online: boolean = false;
+        public readonly online = false;
 
         /**
          * Construct new OfflinePlayer instance
@@ -149,7 +149,7 @@ namespace AltManager {
         /**
          * Whether the player is online. This is always the case for Player.
          */
-        public readonly online: boolean = true;
+        public readonly online = true;
 
         /**
          * AltManager API client instance used to fetch the data
