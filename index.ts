@@ -220,6 +220,7 @@ namespace AltManager {
          * Disconnect from current server
          */
         public async disconnect(): Promise<void> {
+            this.offlinePlayer.client._socket.emit("unsubscribe", this.offlinePlayer.id);
             await this.client._fetch(`/players/${this.offlinePlayer.id}/disconnect`, 'POST');
         }
 
