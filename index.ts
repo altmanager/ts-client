@@ -208,6 +208,12 @@ namespace AltManager {
          */
         constructor(public readonly offlinePlayer: OfflinePlayer, public readonly server: string, public readonly version: string, public readonly username: string, liveData: typeof Player.prototype.liveData) {
             this.liveData = liveData;
+
+            // subscribe to live data updates
+            this.offlinePlayer.client._socket.emit("subscribe", this.offlinePlayer.id);
+            this.offlinePlayer.client._socket.on("data", (data: typeof Player.prototype.liveData) => {
+                this.liveData = data;
+            });
         }
 
         /**
