@@ -1,6 +1,6 @@
 {
   "name": "@altmanager/ts-client",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Alt manager TypeScript client library",
   "main": "dist/index.js",
   "type": "module",
