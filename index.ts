@@ -228,6 +228,11 @@ namespace AltManager {
          */
         constructor(public readonly offlinePlayer: OfflinePlayer, public readonly server: string, public readonly version: string, public readonly username: string, public readonly uuid: string, liveData: Player.LiveData) {
             this.liveData = liveData;
+
+            this.offlinePlayer.client.on("playerData", (id: PlayerId, data: Player.LiveData) => {
+                if (id !== this.offlinePlayer.id) return;
+                this.liveData = data;
+            });
         }
 
         /**
