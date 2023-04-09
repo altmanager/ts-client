@@ -140,6 +140,7 @@ namespace AltManager {
          */
         constructor(client: AltManager, public readonly id: PlayerId, public readonly name: string, public readonly authMethod: "mojang" | "microsoft" | "offline", public readonly lastOnline: Date | null) {
             super(client);
+            this.client._socket.emit("subscribe", this.id);
         }
 
         /**
