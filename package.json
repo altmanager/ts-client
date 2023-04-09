@@ -13,10 +13,10 @@
   "license": "GPL-3.0",
   "devDependencies": {
     "@types/node": "^18.15.11",
-    "typed-emitter": "^2.1.0",
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "socket.io-client": "^4.6.1"
+    "socket.io-client": "^4.6.1",
+    "typed-emitter": "^2.1.0"
   }
 }
