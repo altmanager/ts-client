@@ -1,10 +1,20 @@
 import * as SocketIOClient from "socket.io-client";
 import EventEmitter from "events";
+import TypedEventEmitter from "typed-emitter";
+
+type MessageEvents = {
+    playerConnect: (id: AltManager.PlayerId) => void;
+    playerDisconnect: (id: AltManager.PlayerId) => void;
+    playerCreate: (id: AltManager.PlayerId) => void;
+    playerDelete: (id: AltManager.PlayerId) => void;
+    playerMessage: (id: AltManager.PlayerId, jsonMsg: any, position: string) => void;
+    playerData: (id: AltManager.PlayerId, data: AltManager.Player.LiveData) => void;
+};
 
 /**
  * Alt manager API client
  */
-class AltManager {
+class AltManager extends (EventEmitter as new () => TypedEventEmitter<MessageEvents>) {
     /**
      * Web socket client
      * @internal
@@ -16,7 +26,15 @@ class AltManager {
      * @param [baseUrl] Base URL of the API. Default: `http://localhost:8080`
      */
     constructor(public readonly baseUrl: string = 'http://localhost:8080') {
+        super();
         this._socket = SocketIOClient.io(baseUrl);
+
+        this._socket.on("playerConnect", (id: AltManager.PlayerId) => this.emit("playerConnect", id));
+        this._socket.on("playerDisconnect", (id: AltManager.PlayerId) => this.emit("playerDisconnect", id));
+        this._socket.on("playerCreate", (id: AltManager.PlayerId) => this.emit("playerCreate", id));
+        this._socket.on("playerDelete", (id: AltManager.PlayerId) => this.emit("playerDelete", id));
+        this._socket.on("playerMessage", (id: AltManager.PlayerId, jsonMsg: any, position: string) => this.emit("playerMessage", id, jsonMsg, position));
+        this._socket.on("playerData", (id: AltManager.PlayerId, data: AltManager.Player.LiveData) => this.emit("playerData", id, data));
     }
 
     /**
@@ -108,30 +126,6 @@ namespace AltManager {
      */
     export class OfflinePlayer extends Client {
         /**
-         * Event emitter
-         */
-        private readonly eventEmitter = new EventEmitter();
-
-        /**
-         * The player has been authenticated and connected to a server
-         */
-        public on(event: "connect", listener: (player: Player) => void): this;
-        public on(event: string, listener: (...args: any[]) => void): this {
-            this.eventEmitter.on(event, listener);
-            return this;
-        }
-
-        /**
-         * The player has been authenticated and connected to a server
-         */
-        public once(event: "connect", listener: (player: Player) => void): this;
-        public once(event: string, listener: (...args: any[]) => void): this {
-            this.eventEmitter.once(event, listener);
-            return this;
-        }
-
-
-        /**
          * Whether the player is online. This is never the case for OfflinePlayer.
          */
         public readonly online = false;
@@ -172,88 +166,6 @@ namespace AltManager {
      */
     export class Player {
         /**
-         * Event emitter
-         */
-        private readonly eventEmitter = new EventEmitter();
-
-        /**
-         * The player's health has changed
-         */
-        public on(event: "healthChange", listener: (previousData: typeof Player.prototype.health) => void): this;
-        /**
-         * The player's hunger has changed
-         */
-        public on(event: "hungerChange", listener: (previousHunger: typeof Player.prototype.hunger) => void): this;
-        /**
-         * The player's ping has changed
-         */
-        public on(event: "pingChange", listener: (previousPing: typeof Player.prototype.ping) => void): this;
-        /**
-         * The player's game mode has changed
-         */
-        public on(event: "gameModeChange", listener: (previousGameMode: typeof Player.prototype.gameMode) => void): this;
-        /**
-         * The player's coordinates have changed
-         */
-        public on(event: "coordinatesChange", listener: (previousCoordinates: typeof Player.prototype.coordinates) => void): this;
-        /**
-         * The player's live data has changed
-         */
-        public on(event: "change", listener: (previousData: typeof Player.prototype.liveData) => void): this;
-        /**
-         * The player has received a chat message
-         * @todo Add chat message type
-         */
-        public on(event: "chat", listener: (message: any) => void): this;
-        /**
-         * The player has disconnected from the server
-         */
-        public on(event: "disconnect", listener: () => void): this;
-        public on(event: string, listener: (...args: any[]) => void): this {
-            this.eventEmitter.on(event, listener);
-            return this;
-        }
-
-        /**
-         * The player's health has changed
-         */
-        public once(event: "healthChange", listener: (previousData: typeof Player.prototype.health) => void): this;
-        /**
-         * The player's hunger has changed
-         */
-        public once(event: "hungerChange", listener: (previousHunger: typeof Player.prototype.hunger) => void): this;
-        /**
-         * The player's ping has changed
-         */
-        public once(event: "pingChange", listener: (previousPing: typeof Player.prototype.ping) => void): this;
-        /**
-         * The player's game mode has changed
-         */
-        public once(event: "gameModeChange", listener: (previousGameMode: typeof Player.prototype.gameMode) => void): this;
-        /**
-         * The player's coordinates have changed
-         */
-        public once(event: "coordinatesChange", listener: (previousCoordinates: typeof Player.prototype.coordinates) => void): this;
-        /**
-         * The player's live data has changed
-         */
-        public once(event: "change", listener: (previousData: typeof Player.prototype.liveData) => void): this;
-        /**
-         * The player has received a chat message
-         * @todo Add chat message type
-         */
-        public once(event: "chat", listener: (message: any) => void): this;
-        /**
-         * The player has disconnected from the server
-         */
-        public once(event: "disconnect", listener: () => void): this;
-        public once(event: string, listener: (...args: any[]) => void): this {
-            this.eventEmitter.once(event, listener);
-            return this;
-        }
-
-
-        /**
          * Whether the player is online. This is always the case for Player.
          */
         public readonly online = true;
@@ -268,40 +180,40 @@ namespace AltManager {
         /**
          * Dynamic/live player data
          */
-        private liveData: {health: number, hunger: number, ping: number, gameMode: "survival" | "creative" | "adventure" | "spectator", coordinates: [number, number, number]};
+        private liveData: Player.LiveData;
 
         /**
          * The player's current health (0-20)
          */
-        public get health(): number {
+        public get health(): Player.LiveData['health'] {
             return this.liveData.health;
         }
 
         /**
          * The player's current food/hunger (0-20)
          */
-        public get hunger(): number {
+        public get hunger(): Player.LiveData['hunger'] {
             return this.liveData.hunger;
         }
 
         /**
          * The player's current ping (in milliseconds)
          */
-        public get ping(): number {
+        public get ping(): Player.LiveData['ping'] {
             return this.liveData.ping;
         }
 
         /**
          * The player's current game mode
          */
-        public get gameMode(): "survival" | "creative" | "adventure" | "spectator" {
+        public get gameMode(): Player.LiveData['gameMode'] {
             return this.liveData.gameMode;
         }
 
         /**
          * The player's current coordinates
          */
-        public get coordinates(): [number, number, number] {
+        public get coordinates(): Player.LiveData['coordinates'] {
             return this.liveData.coordinates;
         }
 
@@ -314,22 +226,8 @@ namespace AltManager {
          * @param uuid The player's Minecraft UUID
          * @param liveData Dynamic/live player data
          */
-        constructor(public readonly offlinePlayer: OfflinePlayer, public readonly server: string, public readonly version: string, public readonly username: string, public readonly uuid: string, liveData: typeof Player.prototype.liveData) {
+        constructor(public readonly offlinePlayer: OfflinePlayer, public readonly server: string, public readonly version: string, public readonly username: string, public readonly uuid: string, liveData: Player.LiveData) {
             this.liveData = liveData;
-
-            // subscribe to live data updates
-            this.offlinePlayer.client._socket.emit("subscribe", this.offlinePlayer.id);
-            this.offlinePlayer.client._socket.on("data", (data: typeof Player.prototype.liveData) => {
-                // detect changes
-                const keys = Object.keys(data) as (keyof typeof Player.prototype.liveData)[];
-                for (const key of keys) if (data[key] !== this.liveData[key]) this.eventEmitter.emit(key + "Change", this.liveData[key]);
-                this.eventEmitter.emit("change", this.liveData);
-                // update live data
-                this.liveData = data;
-            });
-            this.offlinePlayer.client._socket.on("chat", (message: string) => {
-                this.eventEmitter.emit("chat", message);
-            });
         }
 
         /**
@@ -338,7 +236,6 @@ namespace AltManager {
         public async disconnect(): Promise<void> {
             this.offlinePlayer.client._socket.emit("unsubscribe", this.offlinePlayer.id);
             await this.client._fetch(`/players/${this.offlinePlayer.id}/disconnect`, 'POST');
-            this.eventEmitter.emit("disconnect");
         }
 
         /**
@@ -347,6 +244,16 @@ namespace AltManager {
          */
         public async send(message: string): Promise<void> {
             await this.client._fetch(`/players/${this.offlinePlayer.id}/chat`, 'POST', {message});
+        }
+    }
+
+    export namespace Player {
+        export interface LiveData {
+            health: number;
+            hunger: number;
+            ping: number;
+            gameMode: "survival" | "creative" | "adventure" | "spectator";
+            coordinates: [number, number, number];
         }
     }
 }
