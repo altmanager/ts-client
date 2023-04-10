@@ -9,6 +9,7 @@ type MessageEvents = {
     playerDelete: (id: AltManager.PlayerId) => void;
     playerMessage: (id: AltManager.PlayerId, time: Date, message: string, position: string, jsonMsg: any) => void;
     playerData: (id: AltManager.PlayerId, data: AltManager.Player.LiveData) => void;
+    commandResponse: (id: AltManager.PlayerId, isError: boolean, response: string) => void;
 };
 
 /**
@@ -35,6 +36,7 @@ class AltManager extends (EventEmitter as new () => TypedEventEmitter<MessageEve
         this._socket.on("playerDelete", (id: AltManager.PlayerId) => this.emit("playerDelete", id));
         this._socket.on("playerMessage", (id: AltManager.PlayerId, time: number, message: string, position: string, jsonMsg: any) => this.emit("playerMessage", id, new Date(time), message, position, jsonMsg));
         this._socket.on("playerData", (id: AltManager.PlayerId, data: AltManager.Player.LiveData) => this.emit("playerData", id, data));
+        this._socket.on("commandResponse", (id: AltManager.PlayerId, isError: boolean, response: string) => this.emit("commandResponse", id, isError, response));
     }
 
     /**
