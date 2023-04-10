@@ -162,6 +162,21 @@ namespace AltManager {
         public async delete(): Promise<void> {
             await this.client._fetch(`/players/${this.id}`, 'DELETE');
         }
+
+        /**
+         * Get chat history
+         * @param [limit] Maximum number of lines to return. If omitted, all lines are returned
+         */
+        public async getChatHistory(limit?: number): Promise<string> {
+            return await this.client._fetch(`/players/${this.id}/chat`, 'GET', {limit});
+        }
+
+        /**
+         * Delete chat history
+         */
+        public async deleteChatHistory(): Promise<void> {
+            await this.client._fetch(`/players/${this.id}/chat`, 'DELETE');
+        }
     }
 
     /**
